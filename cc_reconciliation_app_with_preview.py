@@ -1,4 +1,3 @@
-
 import pandas as pd
 from datetime import datetime, timedelta
 import streamlit as st
@@ -59,24 +58,22 @@ def get_expense_group(label):
 
 def process_file(uploaded_file, last4):
     df = pd.read_csv(uploaded_file, header=None)
-    df.dropna(axis=1, how="all", inplace=True)  # Remove empty columns
-
-    # Drop columns that are entirely "*"
+    df.dropna(axis=1, how="all", inplace=True)
     df = df.loc[:, ~df.apply(lambda col: col.astype(str).str.fullmatch(r"\*").all())]
 
-    # Show preview to user
-    st.write(f"🔍 Raw preview from card ending in {last4}:")
+    st.write(f"🔍 Preview of card ending in {last4}:")
     st.dataframe(df.head())
     st.write("📋 Detected columns:", df.columns.tolist())
 
-    # Assume standard format: Post Date, Amount, [blank], Description, Memo
-    if df.shape[1] >= 5:
-        df = df.drop(df.columns[2], axis=1)  # Drop the third blank column
-        df.columns = ["Post Date", "Amount", "Description", "Memo"]
+    if df.shape[1] == 3:
+        df.columns = ["Post Date", "Amount", "Description"]
     elif df.shape[1] == 4:
         df.columns = ["Post Date", "Amount", "Description", "Memo"]
+    elif df.shape[1] == 5:
+        df = df.drop(df.columns[2], axis=1)
+        df.columns = ["Post Date", "Amount", "Description", "Memo"]
     else:
-        st.error("❌ Unexpected column layout. Please confirm file structure.")
+        st.error("❌ Unrecognized column layout.")
         return pd.DataFrame()
 
     df.insert(0, "Card Last 4", last4)
@@ -112,7 +109,8 @@ if file1 and file2:
             parts_df["Amount"] = pd.to_numeric(parts_df["Amount"], errors="coerce")
 
             def is_fuzzy_matched(row):
-                date_range = (parts_df["Date"] >= row["Post Date"] - timedelta(days=1)) &                              (parts_df["Date"] <= row["Post Date"] + timedelta(days=1))
+                date_range = (parts_df["Date"] >= row["Post Date"] - timedelta(days=1)) & \
+                             (parts_df["Date"] <= row["Post Date"] + timedelta(days=1))
                 amount_match = abs(parts_df["Amount"] - row["Amount"]) < 0.01
                 return (date_range & amount_match).any()
 
@@ -122,42 +120,4 @@ if file1 and file2:
 
         report1 = combined.sort_values(by="Post Date")
         report2 = combined.sort_values(by=["Label", "Post Date"])
-        matched_only = combined[combined["Matched"] == True].sort_values(by="Post Date")
-        unmatched_only = combined[combined["Matched"] == False].sort_values(by="Post Date")
 
-        total_cog = combined[combined["Label"].isin(cog_labels)]["Amount"].sum()
-        total_other = combined[combined["Label"].isin(other_labels)]["Amount"].sum()
-        summary = pd.DataFrame({
-            "Group": ["COG", "Other Expenses"],
-            "Total Amount": [total_cog, total_other]
-        })
-
-        st.subheader("Summary Report")
-        st.dataframe(summary)
-
-        st.subheader("Reconciliation View")
-        def highlight_matches(row):
-            if row["Matched"]:
-                return ["background-color: lightgreen"] * len(row)
-            else:
-                return [""] * len(row)
-
-        styled_report1 = report1.style.apply(highlight_matches, axis=1)
-        st.dataframe(styled_report1)
-
-        from io import BytesIO
-        output = BytesIO()
-        with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
-            report1.to_excel(writer, sheet_name="All Transactions", index=False)
-            report2.to_excel(writer, sheet_name="By Label & Date", index=False)
-            matched_only.to_excel(writer, sheet_name="Matched", index=False)
-            unmatched_only.to_excel(writer, sheet_name="Unmatched", index=False)
-            summary.to_excel(writer, sheet_name="Summary", index=False)
-        output.seek(0)
-
-        st.download_button(
-            label="📥 Download Reconciliation Excel",
-            data=output,
-            file_name=f"CreditCard_Reconciliation_{datetime.now().strftime('%Y-%m-%d')}.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
