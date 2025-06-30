@@ -47,7 +47,7 @@ known_vendors = {
     "shell": "Gas",
     "lawn": "Office Expenses",
     "youtube tv": "Office Expenses",
-    "mercedes-benz": "Dealership",
+    "mercedes-benz": "Dealership"
 }
 
 def extract_vendor(description):
