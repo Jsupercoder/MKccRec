@@ -1,10 +1,7 @@
 import streamlit as st
 import pandas as pd
 import re
-import os
 from datetime import datetime
-from google.oauth2 import service_account
-from googleapiclient.discovery import build
 
 st.set_page_config(page_title="CC Reconciliation - Google Sheets", layout="wide")
 st.title("📊 Credit Card Reconciliation to Google Sheets")
@@ -36,17 +33,18 @@ with col2:
 
 if cc6_file and cc7_file:
     try:
-    df6 = pd.read_csv(cc6_file, header=None)
-    df7 = pd.read_csv(cc7_file, header=None)
-    df6_cleaned = clean_and_format(df6, "0078")
-    df7_cleaned = clean_and_format(df7, "3896")
+        df6 = pd.read_csv(cc6_file, header=None)
+        df7 = pd.read_csv(cc7_file, header=None)
 
-    combined_df = pd.concat([df6_cleaned, df7_cleaned], ignore_index=True)
-    combined_df = combined_df.sort_values("Date")
+        df6_cleaned = clean_and_format(df6, "0078")
+        df7_cleaned = clean_and_format(df7, "3896")
 
-    st.success("✅ CSVs processed successfully.")
-    st.write("🧾 Preview of Combined Data:")
-    st.dataframe(combined_df.head())
+        combined_df = pd.concat([df6_cleaned, df7_cleaned], ignore_index=True)
+        combined_df = combined_df.sort_values("Date")
 
-except Exception as e:
-    st.error(f"❌ Failed to process files: {e}")
+        st.success("✅ CSVs processed successfully.")
+        st.write("🧾 Preview of Combined Data:")
+        st.dataframe(combined_df.head())
+
+    except Exception as e:
+        st.error(f"❌ Failed to process files: {e}")
