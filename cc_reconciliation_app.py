@@ -16,12 +16,24 @@ def extract_vendor(description):
     return "Other"
 
 def clean_and_format(df, last4):
+    # Drop completely empty columns
+    df = df.dropna(axis=1, how="all")
+
+    # Drop column containing only asterisks if exists
+    df = df.loc[:, ~df.apply(lambda col: col.astype(str).str.fullmatch(r"\\*").all())]
+
+    # If more than 3 columns, trim to first 3 non-empty ones
+    if df.shape[1] > 3:
+        df = df.iloc[:, :3]
+
+    # Now assign expected column names
     df.columns = ["Date", "Amount", "Description"]
     df["Last 4"] = last4
     df["Vendor"] = df["Description"].apply(extract_vendor)
     df = df[["Date", "Amount", "Vendor", "Last 4", "Description"]]
     df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
     return df
+
 
 st.subheader("Step 1: Upload Your Credit Card CSVs")
 
