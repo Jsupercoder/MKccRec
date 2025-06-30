@@ -25,7 +25,7 @@ known_vendors = {
     "food mart": "Food Mart",
     "e&l tools": "Fixed Assets",
     "online payment": "Payment",
-    "moving iron": "Sublet",
+    "movin iron": "Sublet",
     "brenntag": "Brenntag",
     "1-800 radiator": "1-800 Radiator",
     "rob's hardware": "Office Expenses",
