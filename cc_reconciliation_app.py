@@ -30,7 +30,7 @@ known_vendors = {
     "1-800 radiator": "1-800 Radiator",
     "rob's hardware": "Office Expenses",
     "sterling mccall": "Dealership",
-    "Tom Peacock": "Dealership",
+    "tom peacock": "Dealership",
     "gexa": "Office Expenses",
     "a-1 auto electric": "A-1 Auto Electric",
     "audi": "Dealership",
