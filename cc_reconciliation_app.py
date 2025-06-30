@@ -104,26 +104,26 @@ if cc6_file and cc7_file:
         with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
             combined_df.to_excel(writer, sheet_name="Combined by Date", index=False)
             # Sort data by Vendor and Date
-grouped = combined_df.sort_values(["Vendor", "Date"])
+            grouped = combined_df.sort_values(["Vendor", "Date"])
 
-# Create a list to hold rows for the new table
-rows = []
-for vendor, group in grouped.groupby("Vendor"):
-    rows.append(pd.Series())  # Blank row before each group (optional)
-    rows.append(group)        # All rows for this vendor
-    subtotal = group["Amount"].sum()
-    subtotal_row = pd.DataFrame({
-        "Date": [""],
-        "Amount": [subtotal],
-        "Vendor": [f"{vendor} Subtotal"],
-        "Last 4": [""],
-        "Description": [""]
-    })
-    rows.append(subtotal_row)
+            # Create a list to hold rows for the new table
+            rows = []
+            for vendor, group in grouped.groupby("Vendor"):
+                rows.append(pd.Series())  # Blank row before each group (optional)
+                rows.append(group)        # All rows for this vendor
+                subtotal = group["Amount"].sum()
+                subtotal_row = pd.DataFrame({
+                    "Date": [""],
+                    "Amount": [subtotal],
+                    "Vendor": [f"{vendor} Subtotal"],
+                    "Last 4": [""],
+                    "Description": [""]
+                })
+                rows.append(subtotal_row)
 
-# Flatten into one DataFrame
-grouped_with_subtotals = pd.concat(rows, ignore_index=True)
-grouped_with_subtotals.to_excel(writer, sheet_name="Grouped by Vendor", index=False)
+            # Flatten into one DataFrame
+            grouped_with_subtotals = pd.concat(rows, ignore_index=True)
+            grouped_with_subtotals.to_excel(writer, sheet_name="Grouped by Vendor", index=False)
 
 
             # Add notes
