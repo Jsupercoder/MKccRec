@@ -2,6 +2,7 @@
 import streamlit as st
 import pandas as pd
 import re
+import io
 from datetime import datetime
 
 st.set_page_config(page_title="CC Reconciliation", layout="wide")
@@ -112,6 +113,32 @@ if cc6_file and cc7_file:
         st.success(f"✅ CSVs processed successfully — total rows: {len(combined_df)}")
         st.write("🧾 Preview of Combined Data:")
         st.dataframe(combined_df, use_container_width=True, hide_index=True)
+        # Prepare Excel with two tabs
+output = io.BytesIO()
+with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+    # Tab 1: Combined by Date
+    combined_df.to_excel(writer, sheet_name="Combined by Date", index=False)
+
+    # Tab 2: Grouped by Vendor and Date
+    grouped = combined_df.sort_values(["Vendor", "Date"])
+    grouped.to_excel(writer, sheet_name="Grouped by Vendor", index=False)
+
+    # Add syncing notes
+    workbook = writer.book
+    ws1 = writer.sheets["Combined by Date"]
+    ws2 = writer.sheets["Grouped by Vendor"]
+    note_fmt = workbook.add_format({"italic": True, "font_color": "gray"})
+    ws1.write("G1", "Highlight sync with Tab 2 must be manual or scripted.", note_fmt)
+    ws2.write("G1", "Consider using formulas or ID to sync with Tab 1.", note_fmt)
+
+# Streamlit download button
+st.download_button(
+    label="📥 Download Excel Report with 2 Tabs",
+    data=output.getvalue(),
+    file_name="CreditCard_Reconciliation_Report.xlsx",
+    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+)
+
 
     except Exception as e:
         st.error(f"❌ Failed to process files: {e}")
